@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stream Iframe Viewer</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        max-width: 1200px;
+        width: 100%;
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+        font-size: 2.5rem;
+      }
+
+      .stream-section {
+        margin-bottom: 30px;
+      }
+
+      .iframe-container {
+        position: relative;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        background: #000;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        aspect-ratio: 16/9;
+      }
+
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: block;
+      }
+
+      .stream-info {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 20px;
+      }
+
+      .status {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9rem;
+      }
+
+      .status.live {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status.offline {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .status.connecting {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .controls {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 20px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 25px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+      }
+
+      .btn-primary {
+        background: #007bff;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #0056b3;
+        transform: translateY(-2px);
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #545b62;
+        transform: translateY(-2px);
+      }
+
+      .input-group {
+        margin-bottom: 20px;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+      }
+
+      input[type="text"]:focus {
+        outline: none;
+        border-color: #007bff;
+      }
+
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+        display: none;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+      }
+
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #007bff;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .iframe-options {
+        background: #e9ecef;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+      }
+
+      .iframe-options h4 {
+        margin-bottom: 10px;
+        color: #495057;
+      }
+
+      .option-group {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .option-group label {
+        font-weight: 500;
+        min-width: 120px;
+      }
+
+      .option-group input,
+      .option-group select {
+        padding: 5px 10px;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 20px;
+          margin: 10px;
+        }
+
+        h1 {
+          font-size: 2rem;
+        }
+
+        .controls {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        button {
+          width: 100%;
+          max-width: 300px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>EthAccra Live Hackathon Event</h1>
+
+      <div class="stream-section">
+        <div class="input-group">
+          <input
+            type="text"
+            id="streamInput"
+            placeholder="Enter streaming URL (HLS, WebRTC, or direct video URL)"
+            value="http://207.180.247.72:8889/ethAccra"
+          />
+        </div>
+
+        <div class="iframe-options">
+          <h4>Iframe Options</h4>
+          <div class="option-group">
+            <label>Width:</label>
+            <input type="text" id="iframeWidth" value="100%" />
+          </div>
+          <div class="option-group">
+            <label>Height:</label>
+            <input type="text" id="iframeHeight" value="400px" />
+          </div>
+          <div class="option-group">
+            <label>Allow Fullscreen:</label>
+            <select id="allowFullscreen">
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+          <div class="option-group">
+            <label>Sandbox:</label>
+            <select id="sandboxMode">
+              <option value="allow-same-origin allow-scripts">Standard</option>
+              <option
+                value="allow-same-origin allow-scripts allow-presentation"
+              >
+                With Presentation
+              </option>
+              <option value="">No Sandbox</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button class="btn-primary" onclick="loadStream()">
+            Load Stream in Iframe
+          </button>
+          <button class="btn-secondary" onclick="loadEthAccraStream()">
+            Load EthAccra Stream
+          </button>
+          <button class="btn-secondary" onclick="testConnectivity()">
+            Test Server Connectivity
+          </button>
+          <button class="btn-secondary" onclick="stopStream()">
+            Stop Stream
+          </button>
+        </div>
+
+        <div class="error" id="errorMessage"></div>
+      </div>
+
+      <!-- <div class="iframe-container"> -->
+      <iframe
+        id="streamIframe"
+        src="http://207.180.247.72:8889/ethAccra"
+        allowfullscreen
+        sandbox="allow-same-origin allow-scripts"
+        class="iframe-container"
+      >
+        <p>Your browser doesn&apos;t support iframes.</p>
+      </iframe>
+      <!-- </div> -->
+
+      <div class="stream-info">
+        <h3>Stream Information</h3>
+        <p>
+          <strong>Status:</strong>
+          <span class="status offline" id="streamStatus">Offline</span>
+        </p>
+        <p><strong>Source:</strong> <span id="streamSource">None</span></p>
+        <p><strong>Protocol:</strong> <span id="streamProtocol">None</span></p>
+        <p><strong>Iframe URL:</strong> <span id="iframeUrl">None</span></p>
+      </div>
+
+      <div class="stream-info" style="margin-top: 20px">
+        <h3>Alternative Test Streams</h3>
+        <p>
+          If the MediaMTX server is not accessible, try these public test
+          streams:
+        </p>
+        <div class="controls" style="margin-top: 15px">
+          <button
+            class="btn-secondary"
+            onclick="loadTestStream('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')"
+          >
+            Test Video (MP4)
+          </button>
+          <button
+            class="btn-secondary"
+            onclick="loadTestStream('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8')"
+          >
+            Test HLS Stream
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let currentStream = null;
+      let currentSource = null;
+
+      // Detect stream protocol from URL
+      function detectProtocol(url) {
+        if (url.includes(".m3u8")) {
+          return "HLS";
+        } else if (url.includes("webrtc") || url.includes("whip")) {
+          return "WebRTC";
+        } else if (url.includes("rtmp://207.180.247.72")) {
+          return "RTMP";
+        } else if (url.match(/\.(mp4|webm|ogg|avi|mov)$/i)) {
+          return "Direct Video";
+        } else if (url.includes("207.180.247.72:8888")) {
+          return "HLS";
+        } else if (url.includes("207.180.247.72:8889")) {
+          return "HLS";
+        } else {
+          return "Unknown";
+        }
+      }
+
+      // Load and play stream in iframe
+      async function loadStream() {
+        const input = document.getElementById("streamInput").value.trim();
+        if (!input) {
+          showError("Please enter a streaming URL");
+          return;
+        }
+
+        try {
+          setStatus("connecting", "Connecting...");
+          showError(""); // Clear any previous errors
+
+          const iframe = document.getElementById("streamIframe");
+          const protocol = detectProtocol(input);
+
+          // Convert MediaMTX server URLs to proper HLS format
+          let streamUrl = input;
+          if (
+            input.includes("207.180.247.72:8888") &&
+            !input.includes(".m3u8")
+          ) {
+            streamUrl = input + "/index.m3u8";
+            console.log("Converting to HLS format:", streamUrl);
+          } else if (
+            input.includes("207.180.247.72:8889") &&
+            !input.includes(".m3u8")
+          ) {
+            streamUrl = input + "/index.m3u8";
+            console.log("Converting to HLS format:", streamUrl);
+          }
+
+          console.log("Original URL:", input);
+          console.log("Stream URL:", streamUrl);
+          console.log("Protocol:", protocol);
+
+          // Get iframe options
+          const width = document.getElementById("iframeWidth").value;
+          const height = document.getElementById("iframeHeight").value;
+          const allowFullscreen =
+            document.getElementById("allowFullscreen").value === "true";
+          const sandbox = document.getElementById("sandboxMode").value;
+
+          // Update iframe attributes
+          iframe.style.width = width;
+          iframe.style.height = height;
+          iframe.allowFullscreen = allowFullscreen;
+          iframe.sandbox = sandbox;
+
+          // Set iframe source - use embed page for better control
+          const embedUrl = `stream-embed.html?url=${encodeURIComponent(streamUrl)}`;
+          iframe.src = embedUrl;
+
+          // Update stream info
+          updateStreamInfo(input, protocol, embedUrl);
+
+          // Set up iframe load event
+          iframe.onload = () => {
+            setStatus("live", "Live");
+            currentStream = streamUrl;
+            currentSource = input;
+          };
+
+          iframe.onerror = () => {
+            setStatus("offline", "Error");
+            showError(
+              "Failed to load stream in iframe. The stream may not support iframe embedding or the server may not be accessible.",
+            );
+          };
+        } catch (error) {
+          console.error("Stream loading error:", error);
+          setStatus("offline", "Error");
+          showError(`Error loading stream: ${error.message}`);
+        }
+      }
+
+      // Load EthAccra stream specifically
+      function loadEthAccraStream() {
+        document.getElementById("streamInput").value =
+          "http://207.180.247.72:8889/ethAccra";
+        loadStream();
+      }
+
+      // Load test stream
+      function loadTestStream(url) {
+        document.getElementById("streamInput").value = url;
+        loadStream();
+      }
+
+      // Test server connectivity
+      async function testConnectivity() {
+        const servers = [
+          "http://207.180.247.72:8888/ethAccra",
+          "http://207.180.247.72:8889/ethAccra",
+          "http://207.180.247.72:8888/ethaccra",
+          "http://207.180.247.72:8889/ethaccra",
+        ];
+
+        setStatus("connecting", "Testing connectivity...");
+        showError("");
+
+        for (let i = 0; i < servers.length; i++) {
+          try {
+            console.log(`Testing server ${i + 1}:`, servers[i]);
+            const response = await fetch(servers[i], {
+              method: "HEAD",
+              mode: "no-cors",
+              timeout: 5000,
+            });
+            console.log(`Server ${i + 1} accessible:`, servers[i]);
+            setStatus("live", `Server accessible: ${servers[i]}`);
+            showError("");
+            return;
+          } catch (error) {
+            console.log(`Server ${i + 1} not accessible:`, error.message);
+            continue;
+          }
+        }
+
+        setStatus("offline", "All servers unreachable");
+        showError(
+          "MediaMTX servers are not accessible from your network. This could be due to: 1) Server is down, 2) Firewall blocking access, 3) Network connectivity issues, or 4) Server is behind a VPN/proxy.",
+        );
+      }
+
+      // Stop current stream
+      function stopStream() {
+        const iframe = document.getElementById("streamIframe");
+        iframe.src = "about:blank";
+        currentStream = null;
+        currentSource = null;
+        setStatus("offline", "Offline");
+        updateStreamInfo("None", "None", "None");
+      }
+
+      // Update stream status
+      function setStatus(type, text) {
+        const statusEl = document.getElementById("streamStatus");
+        statusEl.className = `status ${type}`;
+        statusEl.textContent = text;
+      }
+
+      // Update stream information
+      function updateStreamInfo(source, protocol, iframeUrl) {
+        document.getElementById("streamSource").textContent = source;
+        document.getElementById("streamProtocol").textContent = protocol;
+        document.getElementById("iframeUrl").textContent = iframeUrl || "None";
+      }
+
+      // Show error message
+      function showError(message) {
+        const errorEl = document.getElementById("errorMessage");
+        if (message) {
+          errorEl.textContent = message;
+          errorEl.style.display = "block";
+        } else {
+          errorEl.style.display = "none";
+        }
+      }
+
+      // Handle Enter key in input
+      document
+        .getElementById("streamInput")
+        .addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            loadStream();
+          }
+        });
+
+      // Example stream URLs for testing
+      const exampleUrls = [
+        "http://207.180.247.72:8889/ethAccra", // HLS (auto-converted to /index.m3u8)
+        "http://207.180.247.72:8888/ethaccra", // HLS (auto-converted to /index.m3u8)
+        "http://207.180.247.72:8888/ethaccra/index.m3u8", // HLS
+        "http://207.180.247.72:8889/ethaccra/whip", // WebRTC
+        "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4", // Direct video
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", // Public test video
+        "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8", // Public HLS test stream
+      ];
+
+      // Add example URLs to placeholder
+      document.getElementById("streamInput").placeholder =
+        "Enter streaming URL (e.g., " + exampleUrls[0] + ")";
+    </script>
+  </body>
+</html>

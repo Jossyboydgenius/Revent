@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Live Stream Interface</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        max-width: 1200px;
+        width: 100%;
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+        font-size: 2.5rem;
+      }
+
+      .stream-section {
+        margin-bottom: 30px;
+      }
+
+      .video-container {
+        position: relative;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        background: #000;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      }
+
+      video {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .stream-info {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 20px;
+      }
+
+      .status {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9rem;
+      }
+
+      .status.live {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status.offline {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .status.connecting {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .controls {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 20px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 25px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+      }
+
+      .btn-primary {
+        background: #007bff;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #0056b3;
+        transform: translateY(-2px);
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #545b62;
+        transform: translateY(-2px);
+      }
+
+      .input-group {
+        margin-bottom: 20px;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+      }
+
+      input[type="text"]:focus {
+        outline: none;
+        border-color: #007bff;
+      }
+
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+        display: none;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+      }
+
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #007bff;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 20px;
+          margin: 10px;
+        }
+
+        h1 {
+          font-size: 2rem;
+        }
+
+        .controls {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        button {
+          width: 100%;
+          max-width: 300px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎥 Live Stream Interface</h1>
+
+      <div class="stream-section">
+        <div class="input-group">
+          <input
+            type="text"
+            id="streamInput"
+            placeholder="Enter streaming URL (HLS, WebRTC, or direct video URL)"
+            value="http://207.180.247.72:8889/ethAccra"
+          />
+        </div>
+
+        <div class="controls">
+          <button class="btn-primary" onclick="loadStream()">
+            Load Stream
+          </button>
+          <button class="btn-secondary" onclick="loadEthAccraStream()">
+            Load EthAccra Stream
+          </button>
+          <button class="btn-secondary" onclick="testConnectivity()">
+            Test Server Connectivity
+          </button>
+          <button class="btn-secondary" onclick="stopStream()">
+            Stop Stream
+          </button>
+        </div>
+
+        <div class="error" id="errorMessage"></div>
+      </div>
+
+      <div class="video-container">
+        <video id="videoPlayer" controls autoplay muted playsinline>
+          <p>Your browser doesn&apos;t support HTML5 video.</p>
+        </video>
+      </div>
+
+      <div class="stream-info">
+        <h3>Stream Information</h3>
+        <p>
+          <strong>Status:</strong>
+          <span class="status offline" id="streamStatus">Offline</span>
+        </p>
+        <p><strong>Source:</strong> <span id="streamSource">None</span></p>
+        <p><strong>Protocol:</strong> <span id="streamProtocol">None</span></p>
+      </div>
+
+      <div class="stream-info" style="margin-top: 20px">
+        <h3>Alternative Test Streams</h3>
+        <p>
+          If the MediaMTX server is not accessible, try these public test
+          streams:
+        </p>
+        <div class="controls" style="margin-top: 15px">
+          <button
+            class="btn-secondary"
+            onclick="loadTestStream('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')"
+          >
+            Test Video (MP4)
+          </button>
+          <button
+            class="btn-secondary"
+            onclick="loadTestStream('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8')"
+          >
+            Test HLS Stream
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let currentStream = null;
+      let currentSource = null;
+
+      // Detect stream protocol from URL
+      function detectProtocol(url) {
+        if (url.includes(".m3u8")) {
+          return "HLS";
+        } else if (url.includes("webrtc") || url.includes("whip")) {
+          return "WebRTC";
+        } else if (url.includes("rtmp://207.180.247.72")) {
+          return "RTMP";
+        } else if (url.match(/\.(mp4|webm|ogg|avi|mov)$/i)) {
+          return "Direct Video";
+        } else if (url.includes("207.180.247.72:8888")) {
+          return "HLS";
+        } else if (url.includes("207.180.247.72:8889")) {
+          return "HLS";
+        } else {
+          return "Unknown";
+        }
+      }
+
+      // Load and play stream
+      async function loadStream() {
+        const input = document.getElementById("streamInput").value.trim();
+        if (!input) {
+          showError("Please enter a streaming URL");
+          return;
+        }
+
+        try {
+          setStatus("connecting", "Connecting...");
+          showError(""); // Clear any previous errors
+
+          const video = document.getElementById("videoPlayer");
+          const protocol = detectProtocol(input);
+
+          // Convert MediaMTX server URLs to proper HLS format
+          let streamUrl = input;
+          if (
+            input.includes("207.180.247.72:8888") &&
+            !input.includes(".m3u8")
+          ) {
+            streamUrl = input + "/index.m3u8";
+            console.log("Converting to HLS format:", streamUrl);
+          } else if (
+            input.includes("207.180.247.72:8889") &&
+            !input.includes(".m3u8")
+          ) {
+            streamUrl = input + "/index.m3u8";
+            console.log("Converting to HLS format:", streamUrl);
+          }
+
+          console.log("Original URL:", input);
+          console.log("Stream URL:", streamUrl);
+          console.log("Protocol:", protocol);
+
+          // Set up event listeners
+          video.addEventListener("loadstart", () => {
+            setStatus("connecting", "Loading...");
+          });
+
+          video.addEventListener("canplay", () => {
+            setStatus("live", "Live");
+            currentStream = streamUrl;
+            currentSource = input;
+          });
+
+          video.addEventListener("error", (e) => {
+            console.error("Video error:", e);
+            console.error("Error details:", e.target.error);
+
+            // Try fallback URLs for MediaMTX servers
+            if (input.includes("207.180.247.72") && !input.includes(".m3u8")) {
+              console.log("Trying fallback URLs...");
+              tryFallbackUrls(input, video, protocol);
+            } else {
+              setStatus("offline", "Error");
+              showError(
+                "Failed to load stream. Please check the URL and try again.",
+              );
+            }
+          });
+
+          // Set video source
+          video.src = streamUrl;
+          video.type = getVideoType(protocol);
+
+          // Update stream info
+          updateStreamInfo(input, protocol);
+
+          // Try to play
+          await video.play();
+        } catch (error) {
+          console.error("Stream loading error:", error);
+          setStatus("offline", "Error");
+          showError(`Error loading stream: ${error.message}`);
+        }
+      }
+
+      // Try fallback URLs for MediaMTX servers
+      async function tryFallbackUrls(originalUrl, video, protocol) {
+        const fallbackUrls = [
+          originalUrl + "/index.m3u8",
+          originalUrl + "/playlist.m3u8",
+          originalUrl + "/hls/index.m3u8",
+          originalUrl.replace("8889", "8888") + "/index.m3u8",
+          originalUrl.replace("8888", "8889") + "/index.m3u8",
+        ];
+
+        for (let i = 0; i < fallbackUrls.length; i++) {
+          try {
+            console.log(`Trying fallback URL ${i + 1}:`, fallbackUrls[i]);
+            video.src = fallbackUrls[i];
+            video.type = getVideoType(protocol);
+
+            // Wait a bit to see if this URL works
+            await new Promise((resolve, reject) => {
+              const timeout = setTimeout(() => {
+                reject(new Error("Timeout"));
+              }, 5000);
+
+              video.addEventListener(
+                "canplay",
+                () => {
+                  clearTimeout(timeout);
+                  resolve();
+                },
+                { once: true },
+              );
+
+              video.addEventListener(
+                "error",
+                () => {
+                  clearTimeout(timeout);
+                  reject(new Error("Failed"));
+                },
+                { once: true },
+              );
+            });
+
+            // If we get here, the stream loaded successfully
+            setStatus("live", "Live");
+            currentStream = fallbackUrls[i];
+            currentSource = originalUrl;
+            updateStreamInfo(originalUrl, protocol);
+            console.log(
+              "Successfully loaded with fallback URL:",
+              fallbackUrls[i],
+            );
+            return;
+          } catch (error) {
+            console.log(`Fallback URL ${i + 1} failed:`, error.message);
+            continue;
+          }
+        }
+
+        // All fallback URLs failed
+        setStatus("offline", "Error");
+        showError(
+          "Failed to load stream with all available formats. The stream may be offline or the server may not be accessible.",
+        );
+      }
+
+      // Get appropriate MIME type for video
+      function getVideoType(protocol) {
+        switch (protocol) {
+          case "HLS":
+            return "application/x-mpegURL";
+          case "WebRTC":
+            return "application/webrtc";
+          case "Direct Video":
+            return "video/mp4";
+          default:
+            return "video/mp4";
+        }
+      }
+
+      // Load EthAccra stream specifically
+      function loadEthAccraStream() {
+        document.getElementById("streamInput").value =
+          "http://207.180.247.72:8889/ethAccra";
+        loadStream();
+      }
+
+      // Load test stream
+      function loadTestStream(url) {
+        document.getElementById("streamInput").value = url;
+        loadStream();
+      }
+
+      // Test server connectivity
+      async function testConnectivity() {
+        const servers = [
+          "http://207.180.247.72:8888/ethAccra",
+          "http://207.180.247.72:8889/ethAccra",
+          "http://207.180.247.72:8888/ethaccra",
+          "http://207.180.247.72:8889/ethaccra",
+        ];
+
+        setStatus("connecting", "Testing connectivity...");
+        showError("");
+
+        for (let i = 0; i < servers.length; i++) {
+          try {
+            console.log(`Testing server ${i + 1}:`, servers[i]);
+            const response = await fetch(servers[i], {
+              method: "HEAD",
+              mode: "no-cors",
+              timeout: 5000,
+            });
+            console.log(`Server ${i + 1} accessible:`, servers[i]);
+            setStatus("live", `Server accessible: ${servers[i]}`);
+            showError("");
+            return;
+          } catch (error) {
+            console.log(`Server ${i + 1} not accessible:`, error.message);
+            continue;
+          }
+        }
+
+        setStatus("offline", "All servers unreachable");
+        showError(
+          "MediaMTX servers are not accessible from your network. This could be due to: 1) Server is down, 2) Firewall blocking access, 3) Network connectivity issues, or 4) Server is behind a VPN/proxy.",
+        );
+      }
+
+      // Stop current stream
+      function stopStream() {
+        const video = document.getElementById("videoPlayer");
+        video.pause();
+        video.src = "";
+        currentStream = null;
+        currentSource = null;
+        setStatus("offline", "Offline");
+        updateStreamInfo("None", "None");
+      }
+
+      // Update stream status
+      function setStatus(type, text) {
+        const statusEl = document.getElementById("streamStatus");
+        statusEl.className = `status ${type}`;
+        statusEl.textContent = text;
+      }
+
+      // Update stream information
+      function updateStreamInfo(source, protocol) {
+        document.getElementById("streamSource").textContent = source;
+        document.getElementById("streamProtocol").textContent = protocol;
+      }
+
+      // Show error message
+      function showError(message) {
+        const errorEl = document.getElementById("errorMessage");
+        if (message) {
+          errorEl.textContent = message;
+          errorEl.style.display = "block";
+        } else {
+          errorEl.style.display = "none";
+        }
+      }
+
+      // Handle Enter key in input
+      document
+        .getElementById("streamInput")
+        .addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            loadStream();
+          }
+        });
+
+      // Example stream URLs for testing
+      const exampleUrls = [
+        "http://207.180.247.72:8889/ethAccra", // HLS (auto-converted to /index.m3u8)
+        "http://207.180.247.72:8888/ethaccra", // HLS (auto-converted to /index.m3u8)
+        "http://207.180.247.72:8888/ethaccra/index.m3u8", // HLS
+        "http://207.180.247.72:8889/ethaccra/whip", // WebRTC
+        "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4", // Direct video
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", // Public test video
+        "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8", // Public HLS test stream
+      ];
+
+      // Add example URLs to placeholder
+      document.getElementById("streamInput").placeholder =
+        "Enter streaming URL (e.g., " + exampleUrls[0] + ")";
+    </script>
+  </body>
+</html>
