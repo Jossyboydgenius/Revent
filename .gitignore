@@ -1,0 +1,179 @@
+# =============================================================================
+# PROJECT-WIDE GITIGNORE FOR REVENT MONOREPO
+# =============================================================================
+
+# =============================================================================
+# SYSTEM AND OS FILES
+# =============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+.directory
+
+# =============================================================================
+# IDE AND EDITOR FILES
+# =============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+.classpath
+
+# =============================================================================
+# NODE.JS / FRONTEND (Next.js, React, etc.)
+# =============================================================================
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Production builds
+build/
+dist/
+.next/
+out/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Package manager lock files (optional - comment out if you want to track them)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+# bun.lockb
+
+# =============================================================================
+# FOUNDRY / SOLIDITY
+# =============================================================================
+# Compiler files
+cache/
+out/
+
+# Ignores development broadcast logs
+!/broadcast
+/broadcast/*/31337/
+/broadcast/**/dry-run/
+
+# Foundry artifacts
+artifacts/
+
+# =============================================================================
+# EXTERNAL LIBRARIES AND DEPENDENCIES
+# =============================================================================
+# Foundry/Forge dependencies - these are external libraries that should not be tracked
+contract/lib/forge-std/
+contract/lib/openzeppelin-contracts/
+durin/lib/forge-std/
+durin/lib/openzeppelin-contracts/
+durin/lib/solidity-stringutils/
+durin/lib/ens-contracts/
+durin/lib/foundry-multichain-deploy/
+
+# Keep project-specific lib directories:
+# - frontend/lib/ contains custom TypeScript utilities and contracts
+# - durin/src/lib/ contains custom Solidity libraries
+
+# =============================================================================
+# BUILD ARTIFACTS AND GENERATED FILES
+# =============================================================================
+# Documentation
+docs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# =============================================================================
+# DOCKER
+# =============================================================================
+docker-data/
+.dockerignore
+
+# =============================================================================
+# NGINX-RTMP SPECIFIC
+# =============================================================================
+# HLS segments and playlists (if they're generated)
+*.m3u8
+# Only ignore .ts files in HLS directory, not TypeScript files
+hls/*.ts
+
+# =============================================================================
+# VERSION CONTROL
+# =============================================================================
+.gitattributes
+
+# =============================================================================
+# SECURITY
+# =============================================================================
+# Private keys and sensitive files
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+.secrets/
+
+# =============================================================================
+# TESTING
+# =============================================================================
+# Test results
+test-results/
+coverage/
+.nyc_output/
+
+# =============================================================================
+# DEPLOYMENT
+# =============================================================================
+# Deployment artifacts (keep deployment info that should be tracked)
+# deployment-info.txt is kept as it seems to be tracked intentionally
+
+# =============================================================================
+# MISC
+# =============================================================================
+# Logs
+*.log
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+
+# Backup files
+*.bak
+*.backup
