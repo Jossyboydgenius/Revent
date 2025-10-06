@@ -212,7 +212,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Discord**: [Join our community](https://discord.gg/revent)
 
 ---
-
-<div align="center">
-  Made with ❤️ by the Revent Team
-</div> 
