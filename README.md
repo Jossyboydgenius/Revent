@@ -71,7 +71,7 @@ Revent is a decentralized live streaming and events platform that revolutionizes
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/revent.git
+   git clone https://github.com/Jossyboydgenius/Revent.git
    cd revent
    ```
 
