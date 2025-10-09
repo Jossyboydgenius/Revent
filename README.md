@@ -1,6 +1,7 @@
 # Revent 🎬
 ### Tokenizing Events & SocialFi Platform
 
+
 <div align="center">
   <img src="frontend/public/hero.png" alt="Revent Hero" width="400"/>
   
@@ -9,6 +10,7 @@
   [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org)
   [![Solidity](https://img.shields.io/badge/Solidity-^0.8.19-blue)](https://soliditylang.org)
 </div>
+
 
 Revent is a decentralized live streaming and events platform that revolutionizes how we create, discover, and participate in events. Built on Base with Farcaster integration, it combines the power of blockchain technology with real-time streaming to create immersive social experiences.
 
