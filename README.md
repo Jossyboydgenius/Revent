@@ -186,7 +186,7 @@ cd gateway && bun dev
 
 - **Base Blockchain**: L2 solution for fast, low-cost transactions
 - **Farcaster**: Decentralized social network integration
-- **OnchainKit**: Coinbase's toolkit for onchain experiences
+- **OnchainKit**: Coinbase's toolkit for on-chain experiences
 - **The Graph Protocol**: Decentralized indexing and querying
 - **IPFS**: Distributed storage for metadata and content
 - **WebRTC**: Real-time peer-to-peer communication
